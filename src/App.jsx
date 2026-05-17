@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Header from './components/Header.jsx';
 import Sidebar from './components/Sidebar.jsx';
+import InstanceBanner from './components/InstanceBanner.jsx';
 import HomePage from './pages/HomePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import WatchPage from './pages/WatchPage.jsx';
@@ -33,6 +34,7 @@ export default function App() {
       <HashRouter>
         <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
           <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+          <InstanceBanner />
           <div className="flex">
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <main className="flex-1 min-h-[calc(100vh-3.5rem)] overflow-x-hidden">

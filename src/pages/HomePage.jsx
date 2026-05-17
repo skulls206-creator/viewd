@@ -31,7 +31,7 @@ export default function HomePage() {
       {error && (
         <div className="text-center py-12">
           <p className="text-[var(--color-text-secondary)] mb-2">Failed to load trending videos.</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">The Invidious instance may be unavailable. Try changing it in Settings.</p>
+          <p className="text-xs text-[var(--color-text-secondary)]">The instance may be unavailable. VIEWD will attempt to auto-switch to a working instance. If this persists, try changing it in Settings.</p>
         </div>
       )}
 

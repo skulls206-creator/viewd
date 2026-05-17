@@ -33,7 +33,7 @@ export default function SearchPage() {
 
       {error && (
         <div className="text-center py-12 text-[var(--color-text-secondary)]">
-          Search failed. Try again or change instance.
+          Search failed. The instance may be unavailable. VIEWD will attempt to auto-switch. If this persists, try changing the instance in Settings.
         </div>
       )}
 
