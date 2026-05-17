@@ -161,6 +161,9 @@ export default function SettingsPage() {
           <p className="text-xs text-[var(--color-text-secondary)] mt-2">
             All subscriptions and playlists are stored locally in your browser.
           </p>
+          <p className="text-xs text-[var(--color-text-secondary)] mt-3 pt-3 border-t border-[var(--color-border)]">
+            Build: <span className="font-mono">{__APP_VERSION__}</span>
+          </p>
         </div>
       </section>
 
