@@ -11,6 +11,7 @@ import ChannelPage from './pages/ChannelPage.jsx';
 import SubscriptionsPage from './pages/SubscriptionsPage.jsx';
 import TrendingPage from './pages/TrendingPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import HistoryPage from './pages/HistoryPage.jsx';
 import { applyTheme, getTheme } from './lib/store.js';
 
 const queryClient = new QueryClient({
@@ -46,6 +47,7 @@ export default function App() {
                 <Route path="/channel/:id" element={<ChannelPage />} />
                 <Route path="/subscriptions" element={<SubscriptionsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/history" element={<HistoryPage />} />
               </Routes>
             </main>
           </div>

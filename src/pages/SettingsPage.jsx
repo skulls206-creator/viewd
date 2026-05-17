@@ -83,7 +83,24 @@ export default function SettingsPage() {
         <h2 className="text-base font-semibold text-[var(--color-text)] mb-4">Invidious Instance</h2>
         <div className="mb-4 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
           <p className="text-sm text-[var(--color-text-secondary)] mb-2">Current instance</p>
-          <p className="text-sm font-mono text-[var(--color-text)] break-all">{apiInstances}</p>
+          <div className="relative">
+            <p
+              className="text-sm font-mono text-[var(--color-text)] break-all cursor-pointer hover:text-[var(--color-primary)]"
+              onClick={() => {
+                navigator.clipboard.writeText(apiInstances);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              title="Click to copy"
+            >
+              {apiInstances}
+            </p>
+            {copied && (
+              <span className="absolute -top-1 right-0 text-[10px] font-medium text-green-500">
+                Copied!
+              </span>
+            )}
+          </div>
           <button
             onClick={testCurrentHealth}
             disabled={testingHealth}
@@ -170,18 +187,31 @@ export default function SettingsPage() {
       {/* Data */}
       <section>
         <h2 className="text-base font-semibold text-[var(--color-text)] mb-4">Data</h2>
-        <button
-          onClick={() => {
-            if (window.confirm('This will clear all your subscriptions, playlists, and settings. Are you sure?')) {
-              localStorage.removeItem('viewd_store');
-              localStorage.removeItem('viewd_instance');
-              window.location.reload();
-            }
-          }}
-          className="px-4 py-2 rounded-lg border border-red-500 text-sm text-red-500 hover:bg-red-500/10"
-        >
-          Clear all local data
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => {
+              if (window.confirm('Clear your watch history?')) {
+                localStorage.removeItem('viewd_history');
+                alert('History cleared.');
+              }
+            }}
+            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+          >
+            Clear watch history
+          </button>
+          <button
+            onClick={() => {
+              if (window.confirm('This will clear all subscriptions, playlists, and settings. Are you sure?')) {
+                localStorage.removeItem('viewd_store');
+                localStorage.removeItem('viewd_instance');
+                window.location.reload();
+              }
+            }}
+            className="px-4 py-2 rounded-lg border border-red-500 text-sm text-red-500 hover:bg-red-500/10"
+          >
+            Clear all local data
+          </button>
+        </div>
       </section>
     </div>
   );

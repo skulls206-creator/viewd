@@ -110,3 +110,36 @@ export function saveInstance(url) {
   data.instance = url;
   write(data);
 }
+
+// History — last 50 watched videos
+const HISTORY_KEY = 'viewd_history';
+
+export function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch { return []; }
+}
+
+export function addToHistory(video) {
+  let history = getHistory();
+  // Remove duplicate if exists
+  history = history.filter((v) => v.videoId !== video.videoId);
+  // Add to front
+  history.unshift({
+    videoId: video.videoId,
+    title: video.title,
+    author: video.author,
+    authorId: video.authorId,
+    lengthSeconds: video.lengthSeconds,
+    videoThumbnails: video.videoThumbnails,
+    authorThumbnails: video.authorThumbnails,
+    watchedAt: Date.now(),
+  });
+  // Keep last 50
+  if (history.length > 50) history = history.slice(0, 50);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+export function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+}

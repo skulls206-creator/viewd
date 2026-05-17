@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
-import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist } from '../lib/store.js';
+import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory } from '../lib/store.js';
 
 export default function WatchPage() {
   const [searchParams] = useSearchParams();
@@ -23,6 +23,7 @@ export default function WatchPage() {
   useEffect(() => {
     if (video) {
       setSubbed(isSubscribed(video.authorId));
+      addToHistory(video);
     }
   }, [video]);
 
@@ -82,18 +83,59 @@ export default function WatchPage() {
   useEffect(() => {
     function onKeyDown(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const iframe = document.querySelector('#player iframe');
+      const playerEl = playerRef.current;
+
       if (e.key === 'f' || e.key === 'F') {
-        const player = playerRef.current;
-        if (player) {
+        if (playerEl) {
           if (document.fullscreenElement) document.exitFullscreen();
-          else player.requestFullscreen();
+          else playerEl.requestFullscreen();
         }
       }
       if (e.key === 't' || e.key === 'T') setTheater((v) => !v);
-      if (e.key === ' ') {
+      if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
         e.preventDefault();
-        const iframe = document.querySelector('#player iframe');
-        // space handled by YouTube player embed
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"' + (e.key === ' ' ? 'togglePlay' : 'togglePlay') + '","args":""}', '*');
+        }
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (iframe && iframe.contentWindow) {
+          const dir = e.key === 'ArrowLeft' ? -10 : 10;
+          iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":["seekby"],"seekBy":' + dir + '}', '*');
+        }
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[10]}', '*');
+        }
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[-10]}', '*');
+        }
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[0]}', '*');
+        }
+      }
+      if (e.key === 'c' || e.key === 'C') {
+        // Toggle captions — post to iframe
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"toggleCaptions","args":""}', '*');
+        }
+      }
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        const percent = parseInt(e.key) / 10;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":["seekpercent"],"seekPercent":' + percent + '}', '*');
+        }
       }
     }
     window.addEventListener('keydown', onKeyDown);
@@ -111,6 +153,9 @@ export default function WatchPage() {
   if (isLoading) {
     return (
       <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">
+        <div className="text-center py-4 text-sm text-[var(--color-text-secondary)]">
+          Loading video...
+        </div>
         <div className="lg:flex gap-6">
           <div className="lg:w-[65%]">
             <div className="aspect-video rounded-xl skeleton mb-4" />
@@ -122,7 +167,8 @@ export default function WatchPage() {
             </div>
           </div>
           <div className="lg:w-[35%] mt-4 lg:mt-0">
-            {Array.from({ length: 5 }).map((_, i) => (
+            <div className="text-sm text-[var(--color-text-secondary)] mb-3">Up next</div>
+            {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-3 mb-3">
                 <div className="w-40 aspect-video rounded-lg skeleton shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -337,6 +383,27 @@ export default function WatchPage() {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Keyboard shortcuts hint */}
+          <div className="mb-6">
+            <details className="group">
+              <summary className="cursor-pointer text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]">
+                Keyboard shortcuts
+              </summary>
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">Space</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">K</kbd> Play/pause</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">F</kbd> Fullscreen</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">T</kbd> Theater mode</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">J</kbd> Back 10s</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">L</kbd> Forward 10s</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">←</kbd><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">→</kbd> Seek -/+ 10s</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">↑</kbd><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">↓</kbd> Vol +/- 10</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">M</kbd> Mute</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">C</kbd> Captions</div>
+                <div><kbd className="px-1.5 py-0.5 rounded bg-[var(--color-surface)] font-mono text-[11px]">0-9</kbd> Seek to 0%-90%</div>
+              </div>
+            </details>
           </div>
         </div>
 
