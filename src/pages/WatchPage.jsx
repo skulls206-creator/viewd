@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
 import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist } from '../lib/store.js';
 
 export default function WatchPage() {
-  const params = useParams();
-  const videoId = new URLSearchParams(window.location.search).get('v');
+  const [searchParams] = useSearchParams();
+  const videoId = searchParams.get('v');
   const { data: video, isLoading, error } = useVideo(videoId);
   const [theater, setTheater] = useState(false);
   const [showDesc, setShowDesc] = useState(false);

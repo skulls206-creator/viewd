@@ -72,7 +72,7 @@ export default function Header({ onToggleSidebar }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (query.trim()) {
-            window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+            navigate(`/search?q=${encodeURIComponent(query.trim())}`);
           }
         }}
         className="sm:hidden px-4 pb-3"
