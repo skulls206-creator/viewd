@@ -38,8 +38,13 @@ export default function SearchPage() {
       )}
 
       <div className="space-y-4">
+        {isLoading && (
+          <div className="text-center py-4 text-sm text-[var(--color-text-secondary)]">
+            Loading results — Invidious instances can be slow, please wait...
+          </div>
+        )}
         {isLoading
-          ? Array.from({ length: 8 }).map((_, i) => <VideoCardSkeleton key={i} />)
+          ? Array.from({ length: 5 }).map((_, i) => <VideoCardSkeleton key={i} />)
           : data?.map((video) => <VideoCardRow key={video.videoId} video={video} />)}
       </div>
 

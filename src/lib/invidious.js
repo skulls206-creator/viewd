@@ -19,10 +19,8 @@ const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
 
 let currentInstance = DEFAULT_INSTANCE;
 let discoverRunning = false;
-let discoveredFallbacks = [];
 
 // Validate saved instance at init — if it's known-broken, reset to default
-// so the first page load can trigger auto-failover to a working one
 try {
   const saved = localStorage.getItem('viewd_instance');
   if (saved) {
@@ -47,8 +45,8 @@ export function setInstance(url) {
 
 async function checkAndResetIfDead(url) {
   try {
-    const res = await fetch(`${url}/api/v1/trending?region=US`, {
-      signal: AbortSignal.timeout(15000),
+    const res = await fetch(`${url}/api/v1/search?q=test&page=1`, {
+      signal: AbortSignal.timeout(20000),
     });
     if (res.ok) {
       const body = await res.text();
@@ -59,7 +57,7 @@ async function checkAndResetIfDead(url) {
   localStorage.removeItem('viewd_instance');
 }
 
-// Core fetch. On network/timeout errors triggers automatic failover.
+// Core fetch with 30s timeout. On network/timeout errors triggers auto-failover.
 async function fetchApi(path, params = {}) {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
@@ -69,7 +67,7 @@ async function fetchApi(path, params = {}) {
   const url = `${currentInstance}/api/v1${path}${qString ? '?' + qString : ''}`;
 
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(25000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw new Error(text || `HTTP ${res.status}`);
@@ -84,7 +82,7 @@ async function fetchApi(path, params = {}) {
       err.message?.includes('Network request failed') ||
       err.message?.includes('loadfailed') ||
       err.message?.includes('The operation was aborted') ||
-      err.message?.startsWith('HTTP '); // any non-200 triggers failover
+      err.message?.startsWith('HTTP ');
 
     if (isFailoverTrigger) {
       const switched = await discoverAndFailover();
@@ -96,13 +94,12 @@ async function fetchApi(path, params = {}) {
         });
         const ns = nqs.toString();
         const nUrl = `${currentInstance}/api/v1${path}${ns ? '?' + ns : ''}`;
-        const res = await fetch(nUrl, { signal: AbortSignal.timeout(25000) });
+        const res = await fetch(nUrl, { signal: AbortSignal.timeout(30000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       }
     }
 
-    // Re-throw non-network errors and network errors where failover failed
     throw err;
   }
 }
@@ -133,11 +130,11 @@ async function discoverAndFailover() {
       }
     } catch {}
 
-    // Try each candidate — use the actual trending endpoint as health check
+    // Try each candidate — use search endpoint as health check
     for (const url of candidates) {
       try {
-        const res = await fetch(`${url}/api/v1/trending?region=US`, {
-          signal: AbortSignal.timeout(15000),
+        const res = await fetch(`${url}/api/v1/search?q=test&page=1`, {
+          signal: AbortSignal.timeout(20000),
         });
         if (!res.ok) continue;
         const body = await res.text();
@@ -193,7 +190,6 @@ export async function fetchInstances() {
   const seen = new Set();
   const merged = [];
 
-  // Known instances first
   for (const url of KNOWN_INSTANCES) {
     if (!seen.has(url)) {
       seen.add(url);
@@ -221,8 +217,8 @@ export async function fetchInstances() {
 // Standalone health check for the Settings 'Test connection' button
 export async function checkHealth(url) {
   try {
-    const res = await fetch(`${url.replace(/\/+$/, '')}/api/v1/trending?region=US`, {
-      signal: AbortSignal.timeout(15000),
+    const res = await fetch(`${url.replace(/\/+$/, '')}/api/v1/search?q=test&page=1`, {
+      signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) return false;
     const body = await res.text();
