@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getSubscriptions } from '../lib/store.js';
 
 export default function Header({ onToggleSidebar }) {
@@ -7,6 +7,7 @@ export default function Header({ onToggleSidebar }) {
   const [showSubs, setShowSubs] = useState(false);
   const [subs, setSubs] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const subRef = useRef(null);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function Header({ onToggleSidebar }) {
           onSubmit={(e) => {
             e.preventDefault();
             if (query.trim()) {
-              window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+              navigate(`/search?q=${encodeURIComponent(query.trim())}`);
             }
           }}
           className="hidden sm:flex flex-1 max-w-[600px] mx-4"
