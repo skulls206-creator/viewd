@@ -21,9 +21,17 @@ let currentInstance = DEFAULT_INSTANCE;
 let discoverRunning = false;
 let discoveredFallbacks = [];
 
+// Validate saved instance at init — if it's known-broken, reset to default
+// so the first page load can trigger auto-failover to a working one
 try {
   const saved = localStorage.getItem('viewd_instance');
-  if (saved) currentInstance = saved;
+  if (saved) {
+    currentInstance = saved;
+    // Trigger async health check — if failed, reset so failover kicks in
+    setTimeout(() => {
+      checkAndResetIfDead(currentInstance);
+    }, 0);
+  }
 } catch {}
 
 export function getInstance() {
@@ -35,6 +43,20 @@ export function setInstance(url) {
   currentInstance = url.replace(/\/+$/, '');
   localStorage.setItem('viewd_instance', currentInstance);
   if (old !== currentInstance) emitChange(old, currentInstance);
+}
+
+async function checkAndResetIfDead(url) {
+  try {
+    const res = await fetch(`${url}/api/v1/trending?region=US`, {
+      signal: AbortSignal.timeout(15000),
+    });
+    if (res.ok) {
+      const body = await res.text();
+      if (body.trim().startsWith('[')) return; // healthy
+    }
+  } catch {}
+  // Dead — reset to default so next API call triggers failover
+  localStorage.removeItem('viewd_instance');
 }
 
 // Core fetch. On network/timeout errors triggers automatic failover.
@@ -54,16 +76,17 @@ async function fetchApi(path, params = {}) {
     }
     return res.json();
   } catch (err) {
-    const isNetworkError =
+    const isFailoverTrigger =
       err.name === 'AbortError' ||
       err.name === 'TypeError' ||
       err.message?.includes('Failed to fetch') ||
       err.message?.includes('NetworkError') ||
       err.message?.includes('Network request failed') ||
       err.message?.includes('loadfailed') ||
-      err.message?.includes('The operation was aborted');
+      err.message?.includes('The operation was aborted') ||
+      err.message?.startsWith('HTTP '); // any non-200 triggers failover
 
-    if (isNetworkError) {
+    if (isFailoverTrigger) {
       const switched = await discoverAndFailover();
       if (switched) {
         // Retry once on the new instance
