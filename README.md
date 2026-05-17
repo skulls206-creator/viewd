@@ -1,16 +1,46 @@
-# React + Vite
+# VIEWD
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, privacy-first YouTube alternative frontend powered by the [Invidious](https://invidious.io/) API.
 
-Currently, two official plugins are available:
+Built with React 19, Vite, Tailwind CSS v4, and React Query.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Trending videos** sorted by region
+- **Search** with sort options (relevance, rating, date, views)
+- **Video player** with theater mode, keyboard shortcuts (F for fullscreen, T for theater), PiP
+- **Channel browsing** with subscribe/unsubscribe
+- **Subscriptions** stored locally in your browser
+- **Playlists** — create, manage, save videos — all client-side
+- **Comments** — read-only display
+- **Dark / Light / System theme** toggle
+- **Instance management** — browse public CORS-enabled Invidious instances, test health, or set a custom one
+- **Fully responsive** — mobile, tablet, desktop
+- **Skeleton loading states** on all pages
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## No Server Required
 
-## Expanding the ESLint configuration
+- All data comes directly from public Invidious API instances (no proxy needed)
+- Subscriptions and playlists are stored in localStorage
+- Deployable as a static site (GitHub Pages, Netlify, Vercel, etc.)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Deploy
+
+The GitHub Actions workflow in `.github/workflows/deploy.yml` automatically deploys to GitHub Pages on every push to `main`.
+
+## License
+
+MIT
