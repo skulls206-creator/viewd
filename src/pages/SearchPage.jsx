@@ -45,7 +45,7 @@ export default function SearchPage() {
         )}
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => <VideoCardSkeleton key={i} />)
-          : data?.map((video) => <VideoCardRow key={video.videoId} video={video} />)}
+          : data?.filter((v) => v.type === 'video')?.map((video) => <VideoCardRow key={video.videoId} video={video} />)}
       </div>
 
       {!isLoading && data?.length === 0 && (

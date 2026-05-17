@@ -168,7 +168,11 @@ export async function getChannel(channelId, sortBy = 'newest', page = 1) {
 }
 
 export async function getChannelVideos(channelId, sortBy = 'newest', page = 1) {
-  return fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
+  const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
+  // API returns {videos: [...], continuation: ...} not a plain array
+  if (data && Array.isArray(data.videos)) return data.videos;
+  if (Array.isArray(data)) return data;
+  return [];
 }
 
 export async function getPlaylist(playlistId, page = 1) {
