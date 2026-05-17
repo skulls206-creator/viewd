@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { onInstanceChange } from '../lib/events.js';
+import { onInstanceChange } from '../lib/invidious.js';
 
 export default function InstanceBanner() {
   const [changed, setChanged] = useState(null);
