@@ -1,3 +1,5 @@
+import { getInstance } from './invidious.js';
+
 export function formatDuration(seconds) {
   if (!seconds) return '0:00';
   const h = Math.floor(seconds / 3600);
@@ -33,7 +35,12 @@ export function formatPublished(dateStr) {
 
 export function getBestThumbnail(thumbnails) {
   if (!thumbnails || !thumbnails.length) return '';
-  return thumbnails[thumbnails.length - 1]?.url || thumbnails[0]?.url || '';
+  const url = thumbnails[thumbnails.length - 1]?.url || thumbnails[0]?.url || '';
+  // Replit proxy strips the base URL — prepend instance URL if relative path
+  if (url.startsWith('/')) {
+    return getInstance().replace(/\/+$/, '') + url;
+  }
+  return url;
 }
 
 export function getBestAvatar(avatars) {
