@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getSubscriptions } from '../lib/store.js';
+import { extractVideoId } from '../lib/extractVideoId.js';
 
 export default function Header({ onToggleSidebar }) {
   const [query, setQuery] = useState('');
@@ -9,6 +10,14 @@ export default function Header({ onToggleSidebar }) {
   const location = useLocation();
   const navigate = useNavigate();
   const subRef = useRef(null);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    const vid = extractVideoId(q);
+    navigate(vid ? `/watch?v=${vid}` : `/search?q=${encodeURIComponent(q)}`);
+  }
 
   useEffect(() => {
     const handler = (e) => {
@@ -36,12 +45,7 @@ export default function Header({ onToggleSidebar }) {
         </div>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (query.trim()) {
-              navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-            }
-          }}
+          onSubmit={handleSubmit}
           className="hidden sm:flex flex-1 max-w-[600px] mx-4"
         >
           <div className="flex w-full">
@@ -49,7 +53,7 @@ export default function Header({ onToggleSidebar }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search videos..."
+              placeholder="Search or paste a YouTube link..."
               className="w-full px-4 py-2 border border-[var(--color-border)] rounded-l-full bg-[var(--color-surface)] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)] text-sm"
             />
             <button type="submit" className="px-5 border border-l-0 border-[var(--color-border)] rounded-r-full bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]">
@@ -70,12 +74,7 @@ export default function Header({ onToggleSidebar }) {
 
       {/* Mobile search */}
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (query.trim()) {
-            navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-          }
-        }}
+        onSubmit={handleSubmit}
         className="sm:hidden px-4 pb-3"
       >
         <div className="flex">
@@ -83,7 +82,7 @@ export default function Header({ onToggleSidebar }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search videos..."
+            placeholder="Search or paste a YouTube link..."
             className="w-full px-4 py-2 border border-[var(--color-border)] rounded-l-full bg-[var(--color-surface)] text-[var(--color-text)] outline-none text-sm"
           />
           <button type="submit" className="px-4 border border-l-0 border-[var(--color-border)] rounded-r-full bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]">
