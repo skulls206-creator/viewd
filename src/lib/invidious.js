@@ -10,8 +10,8 @@ export function onInstanceChange(fn) {
 
 // Instance records: { url, label? } — label is shown in Settings instead of the raw URL
 const INSTANCE_RECORDS = [
-  { url: 'https://inv.thepixora.com', label: 'The Pixora' },
   { url: 'https://viewd.replit.app', label: 'VIEWD Instance' },
+  { url: 'https://inv.thepixora.com', label: 'The Pixora' },
 ];
 
 // URLs only — used for auto-failover iteration
