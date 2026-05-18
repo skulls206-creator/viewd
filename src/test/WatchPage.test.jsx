@@ -287,3 +287,100 @@ describe('WatchPage — Keyboard Shortcuts', () => {
     expect(container.className).toContain('max-w-full');
   });
 });
+
+// ====================================================
+// Background autoplay prevention
+// ====================================================
+describe('WatchPage — Background Autoplay', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useVideo.mockReturnValue({ data: mockVideo, isLoading: false, error: null });
+    getComments.mockResolvedValue({ comments: [], continuation: null });
+  });
+
+  it('uses autoplay=1 normally (setting off, tab visible)', () => {
+    renderWatch();
+    const iframe = document.querySelector('iframe');
+    expect(iframe.src).toContain('autoplay=1');
+  });
+
+  it('uses autoplay=0 when preventBgAutoplay is on and tab hidden', async () => {
+    // Override mock before render
+    const store = await import('../lib/store.js');
+    store.getPreventBgAutoplay.mockReturnValue(true);
+    document.hidden = true;
+
+    renderWatch();
+    const iframe = document.querySelector('iframe');
+    expect(iframe.src).toContain('autoplay=0');
+
+    // Cleanup
+    document.hidden = false;
+  });
+
+  it('uses autoplay=1 when preventBgAutoplay is on but tab is visible', async () => {
+    const store = await import('../lib/store.js');
+    store.getPreventBgAutoplay.mockReturnValue(true);
+    document.hidden = false;
+
+    renderWatch();
+    const iframe = document.querySelector('iframe');
+    expect(iframe.src).toContain('autoplay=1');
+  });
+});
+
+// ====================================================
+// Comment hiding
+// ====================================================
+describe('WatchPage — Comment Hiding', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useVideo.mockReturnValue({ data: mockVideo, isLoading: false, error: null });
+  });
+
+  it('shows comments by default when setting is off', async () => {
+    getComments.mockResolvedValue({
+      comments: [{ commentId: 'c1', author: 'User', content: 'Test', authorThumbnails: [], publishedText: '1d ago' }],
+      continuation: null,
+    });
+    renderWatch();
+    await waitFor(() => expect(screen.getByText('Test')).toBeInTheDocument());
+  });
+
+  it('starts with "Show comments" button when hideComments is on', async () => {
+    const store = await import('../lib/store.js');
+    store.getHideComments.mockReturnValue(true);
+    getComments.mockResolvedValue({
+      comments: [
+        { commentId: 'c1', author: 'User', content: 'Hidden comment', authorThumbnails: [], publishedText: '1d ago' },
+        { commentId: 'c2', author: 'User2', content: 'Another', authorThumbnails: [], publishedText: '2d ago' },
+      ],
+      continuation: null,
+    });
+
+    renderWatch();
+
+    await waitFor(() => {
+      expect(screen.getByText('Show 2 comments')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Hidden comment')).not.toBeInTheDocument();
+  });
+
+  it('expands comments when "Show comments" is clicked', async () => {
+    const store = await import('../lib/store.js');
+    store.getHideComments.mockReturnValue(true);
+    getComments.mockResolvedValue({
+      comments: [{ commentId: 'c1', author: 'User', content: 'Now visible', authorThumbnails: [], publishedText: '1d ago' }],
+      continuation: null,
+    });
+
+    const user = userEvent.setup();
+    renderWatch();
+
+    await waitFor(() => expect(screen.getByText('Show 1 comment')).toBeInTheDocument());
+    await user.click(screen.getByText('Show 1 comment'));
+
+    expect(screen.getByText('Now visible')).toBeInTheDocument();
+    expect(screen.queryByText('Show 1 comment')).not.toBeInTheDocument();
+  });
+});

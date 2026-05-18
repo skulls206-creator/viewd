@@ -6,6 +6,11 @@ import {
   getPlaylists, createPlaylist, deletePlaylist, addToPlaylist,
   removeFromPlaylist, getHistory, addToHistory, clearHistory,
   getTheme, setTheme, applyTheme,
+  getLoopMode, setLoopMode,
+  getHideComments, setHideComments,
+  getPlaybackSpeed, setPlaybackSpeed,
+  getAccentColor, setAccentColor, applyAccentColor,
+  getMiniPlayer, setMiniPlayer,
 } from '../lib/store.js';
 
 beforeEach(() => {
@@ -148,5 +153,77 @@ describe('Theme', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     applyTheme('light');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
+});
+
+describe('Playback settings', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('loopMode defaults to false', () => {
+    expect(getLoopMode()).toBe(false);
+  });
+
+  it('setLoopMode persists', () => {
+    setLoopMode(true);
+    expect(getLoopMode()).toBe(true);
+    setLoopMode(false);
+    expect(getLoopMode()).toBe(false);
+  });
+
+  it('hideComments defaults to false', () => {
+    expect(getHideComments()).toBe(false);
+  });
+
+  it('setHideComments persists', () => {
+    setHideComments(true);
+    expect(getHideComments()).toBe(true);
+  });
+
+  it('playbackSpeed defaults to 1', () => {
+    expect(getPlaybackSpeed()).toBe(1);
+  });
+
+  it('setPlaybackSpeed persists custom speeds', () => {
+    setPlaybackSpeed(1.5);
+    expect(getPlaybackSpeed()).toBe(1.5);
+    setPlaybackSpeed(2);
+    expect(getPlaybackSpeed()).toBe(2);
+  });
+
+  it('accentColor defaults to empty string', () => {
+    expect(getAccentColor()).toBe('');
+  });
+
+  it('setAccentColor persists and applies to :root', () => {
+    setAccentColor('#22c55e');
+    expect(getAccentColor()).toBe('#22c55e');
+    const primary = document.documentElement.style.getPropertyValue('--color-primary');
+    expect(primary).toBe('#22c55e');
+  });
+
+  it('applyAccentColor sets both primary and hover', () => {
+    document.documentElement.style.removeProperty('--color-primary');
+    document.documentElement.style.removeProperty('--color-primary-hover');
+    applyAccentColor('#06b6d4');
+    expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('#06b6d4');
+    expect(document.documentElement.style.getPropertyValue('--color-primary-hover')).toBe('#05899f');
+  });
+
+  it('applyAccentColor with empty string removes custom vars', () => {
+    applyAccentColor('#06b6d4');
+    applyAccentColor('');
+    expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('');
+    expect(document.documentElement.style.getPropertyValue('--color-primary-hover')).toBe('');
+  });
+
+  it('miniPlayer defaults to true', () => {
+    expect(getMiniPlayer()).toBe(true);
+  });
+
+  it('setMiniPlayer persists', () => {
+    setMiniPlayer(false);
+    expect(getMiniPlayer()).toBe(false);
   });
 });
