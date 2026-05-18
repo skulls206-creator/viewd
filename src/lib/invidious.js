@@ -11,11 +11,11 @@ export function onInstanceChange(fn) {
 // Curated list of instances with working APIs and CORS support.
 // When the official instance list returns no usable entries, these are tried.
 const KNOWN_INSTANCES = [
+  'http://89.117.59.70:3000', // VIEWD proxy (VPS) — fastest, dedicated
   'https://inv.thepixora.com',
-  'http://89.117.59.70:3000', // VIEWD proxy (VPS)
 ];
 
-const DEFAULT_INSTANCE = KNOWN_INSTANCES[0];
+const DEFAULT_INSTANCE = KNOWN_INSTANCES[0]; // http://89.117.59.70:3000
 const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
 
 let currentInstance = DEFAULT_INSTANCE;
