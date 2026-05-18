@@ -9,24 +9,21 @@ export function onInstanceChange(fn) {
 }
 
 // Curated list of instances with working APIs and CORS support.
-// When the official instance list returns no usable entries, these are tried.
 const KNOWN_INSTANCES = [
   'https://inv.thepixora.com',
-  'http://89.117.59.70:3000',
 ];
 
-const DEFAULT_INSTANCE = KNOWN_INSTANCES[0]; // https://inv.thepixora.com
+const DEFAULT_INSTANCE = KNOWN_INSTANCES[0];
 const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
 
 let currentInstance = DEFAULT_INSTANCE;
 let discoverRunning = false;
 
-// Validate saved instance at init — if it's known-broken, reset to default
+// Validate saved instance at init
 try {
   const saved = localStorage.getItem('viewd_instance');
   if (saved) {
     currentInstance = saved;
-    // Trigger async health check — if failed, reset so failover kicks in
     setTimeout(() => {
       checkAndResetIfDead(currentInstance);
     }, 0);
@@ -51,14 +48,12 @@ async function checkAndResetIfDead(url) {
     });
     if (res.ok) {
       const body = await res.text();
-      if (body.trim().startsWith('[')) return; // healthy
+      if (body.trim().startsWith('[')) return;
     }
   } catch {}
-  // Dead — reset to default so next API call triggers failover
   localStorage.removeItem('viewd_instance');
 }
 
-// Core fetch with 30s timeout. On network/timeout errors triggers auto-failover.
 async function fetchApi(path, params = {}) {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
@@ -88,7 +83,6 @@ async function fetchApi(path, params = {}) {
     if (isFailoverTrigger) {
       const switched = await discoverAndFailover();
       if (switched) {
-        // Retry once on the new instance
         const nqs = new URLSearchParams();
         Object.entries(params).forEach(([k, v]) => {
           if (v !== undefined && v !== null) nqs.set(k, v);
@@ -100,7 +94,6 @@ async function fetchApi(path, params = {}) {
         return res.json();
       }
     }
-
     throw err;
   }
 }
@@ -112,12 +105,10 @@ async function discoverAndFailover() {
   try {
     const candidates = [];
 
-    // 1. Known instances (excluding current)
     for (const u of KNOWN_INSTANCES) {
       if (u !== currentInstance) candidates.push(u);
     }
 
-    // 2. Official instance list
     try {
       const res = await fetch(INSTANCE_LIST_URL, { signal: AbortSignal.timeout(10000) });
       const data = await res.json();
@@ -131,7 +122,6 @@ async function discoverAndFailover() {
       }
     } catch {}
 
-    // Try each candidate — use search endpoint as health check
     for (const url of candidates) {
       try {
         const res = await fetch(`${url}/api/v1/search?q=test&page=1`, {
@@ -170,7 +160,6 @@ export async function getChannel(channelId, sortBy = 'newest', page = 1) {
 
 export async function getChannelVideos(channelId, sortBy = 'newest', page = 1) {
   const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
-  // API returns {videos: [...], continuation: ...} not a plain array
   if (data && Array.isArray(data.videos)) return data.videos;
   if (Array.isArray(data)) return data;
   return [];
@@ -190,7 +179,6 @@ export async function getPopular() {
   return fetchApi('/popular');
 }
 
-// Fetch the official CORS-enabled instance list (for the Settings page)
 export async function fetchInstances() {
   const seen = new Set();
   const merged = [];
@@ -219,7 +207,6 @@ export async function fetchInstances() {
   return merged;
 }
 
-// Standalone health check for the Settings 'Test connection' button
 export async function checkHealth(url) {
   try {
     const res = await fetch(`${url.replace(/\/+$/, '')}/api/v1/search?q=test&page=1`, {
