@@ -167,41 +167,52 @@ export async function searchVideos(q, page = 1, sortBy = 'relevance', type = 'vi
   return fetchApi('/search', { q, page, sort_by: sortBy, type, duration, features, region });
 }
 
+/** Try a different known instance as fallback, avoiding the current one */
+async function fallbackToOtherInstance(path) {
+  const candidates = KNOWN_INSTANCES.filter((u) => u !== currentInstance);
+  for (const url of candidates) {
+    try {
+      const fullUrl = `${url.replace(/\/+$/, '')}${path}`;
+      const res = await fetch(fullUrl, { signal: AbortSignal.timeout(30000) });
+      if (!res.ok) continue;
+      const body = await res.text();
+      // Reject error responses (e.g. {"error":"Invidious returned invalid JSON"})
+      if (body.trim().startsWith('{"error"')) continue;
+      return JSON.parse(body);
+    } catch {
+      continue;
+    }
+  }
+  throw new Error('All fallback instances failed');
+}
+
 export async function getVideo(id) {
+  const path = `/api/v1/videos/${id}`;
   try {
     return await fetchApi(`/videos/${id}`);
   } catch (err) {
-    // On failure, try pixora as fallback for video details
-    const fallbackUrl = 'https://inv.thepixora.com';
-    if (fallbackUrl !== currentInstance) {
-      const url = `${fallbackUrl.replace(/\/+$/, '')}/api/v1/videos/${id}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
-      if (!res.ok) throw err;
-      return res.json();
+    try {
+      return await fallbackToOtherInstance(path);
+    } catch {
+      throw err;
     }
-    throw err;
   }
-}
-
-export async function getChannel(channelId, sortBy = 'newest', page = 1) {
-  return fetchApi(`/channels/${channelId}`, { sort_by: sortBy, page });
-}
-
-export async function getChannelVideos(channelId, sortBy = 'newest', page = 1) {
-  const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
-  if (data && Array.isArray(data.videos)) return data.videos;
-  if (Array.isArray(data)) return data;
-  return [];
-}
-
-export async function getPlaylist(playlistId, page = 1) {
-  return fetchApi(`/playlists/${playlistId}`, { page });
 }
 
 export async function getComments(videoId, continuation = null) {
   const params = {};
   if (continuation) params.continuation = continuation;
-  return fetchApi(`/comments/${videoId}`, params);
+  const qs = new URLSearchParams(params).toString();
+  const path = `/api/v1/comments/${videoId}${qs ? '?' + qs : ''}`;
+  try {
+    return await fetchApi(`/comments/${videoId}`, params);
+  } catch (err) {
+    try {
+      return await fallbackToOtherInstance(path);
+    } catch {
+      throw err;
+    }
+  }
 }
 
 export async function getPopular() {

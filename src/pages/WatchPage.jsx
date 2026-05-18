@@ -35,11 +35,20 @@ export default function WatchPage() {
     }
   }, [videoId]);
 
+  // Use a ref to track the latest continuation so the effect always uses
+  // the correct (null for fresh loads) value rather than stale closures
+  const continuationRef = useRef(null);
+
+  useEffect(() => {
+    continuationRef.current = commentContinuation;
+  }, [commentContinuation]);
+
   async function loadComments() {
     if (!videoId) return;
     setLoadingComments(true);
     try {
-      const data = await getComments(videoId, commentContinuation);
+      const cont = continuationRef.current;
+      const data = await getComments(videoId, cont);
       setComments((prev) => [...prev, ...(data.comments || [])]);
       setCommentContinuation(data.continuation || null);
     } catch {
