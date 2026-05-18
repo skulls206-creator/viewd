@@ -161,7 +161,19 @@ export async function searchVideos(q, page = 1, sortBy = 'relevance', type = 'vi
 }
 
 export async function getVideo(id) {
-  return fetchApi(`/videos/${id}`);
+  try {
+    return await fetchApi(`/videos/${id}`);
+  } catch (err) {
+    // On failure, try pixora as fallback for video details
+    const fallbackUrl = 'https://inv.thepixora.com';
+    if (fallbackUrl !== currentInstance) {
+      const url = `${fallbackUrl.replace(/\/+$/, '')}/api/v1/videos/${id}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+      if (!res.ok) throw err;
+      return res.json();
+    }
+    throw err;
+  }
 }
 
 export async function getChannel(channelId, sortBy = 'newest', page = 1) {

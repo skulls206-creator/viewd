@@ -24,7 +24,36 @@ export function useVideo(id) {
     queryFn: () => getVideo(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
+    retry: false,
   });
+}
+
+export function useVideoWithFallback(id, fallbackUrl) {
+  const primary = useQuery({
+    queryKey: ['video', id],
+    queryFn: () => getVideo(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  // If primary failed, try fallback instance
+  const fallback = useQuery({
+    queryKey: ['video-fallback', id, fallbackUrl],
+    queryFn: async () => {
+      const { getVideo } = await import('../lib/invidious.js');
+      return getVideo(id);
+    },
+    enabled: !!id && !!fallbackUrl && !!primary.error,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Return primary data if successful, otherwise fallback data
+  if (primary.data) return { data: primary.data, isLoading: false, error: null, isFallback: false };
+  if (fallback.data) return { data: fallback.data, isLoading: false, error: null, isFallback: true };
+  if (primary.isLoading) return { data: null, isLoading: true, error: null, isFallback: false };
+  if (fallback.isLoading) return { data: null, isLoading: true, error: null, isFallback: true };
+  return { data: null, isLoading: false, error: primary.error || fallback.error, isFallback: false };
 }
 
 export function useChannel(id) {

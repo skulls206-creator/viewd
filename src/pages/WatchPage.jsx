@@ -196,7 +196,7 @@ export default function WatchPage() {
           />
         </div>
         <p className="text-sm text-[var(--color-text-secondary)] text-center">
-          Video detail could not be loaded from this instance, but you can still watch below.
+          Video detail could not be loaded from this instance, but you can still watch above.
         </p>
       </div>
     );
