@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance } from '../lib/store.js';
+import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance, getPreventBgAutoplay, setPreventBgAutoplay, getPauseBgTabs, setPauseBgTabs } from '../lib/store.js';
 import { getInstance, setInstanceManual as setApiInstance, fetchInstances, checkHealth, instanceDisplay } from '../lib/invidious.js';
 import { useInstances, useHealthCheck } from '../hooks/useInvidious.js';
 
@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [healthResult, setHealthResult] = useState(null);
   const [customInstance, setCustomInstance] = useState('');
   const { data: publicInstances } = useInstances();
+  const [preventBg, setPreventBg] = useState(getPreventBgAutoplay());
+  const [pauseBg, setPauseBg] = useState(getPauseBgTabs());
 
   useEffect(() => {
     applyTheme(theme);
@@ -165,6 +167,42 @@ export default function SettingsPage() {
               Set
             </button>
           </div>
+        </div>
+      </section>
+
+      {/* Playback */}
+      <section className="mb-8">
+        <h2 className="text-base font-semibold text-[var(--color-text)] mb-4">Playback</h2>
+        <div className="space-y-3">
+          <label className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Prevent background autoplay</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                Videos in background tabs won't autoplay on load
+              </p>
+            </div>
+            <button
+              onClick={() => { const v = !preventBg; setPreventBg(v); setPreventBgAutoplay(v); }}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${preventBg ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${preventBg ? 'translate-x-5' : ''}`} />
+            </button>
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Pause background tabs</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                When you switch away, video pauses. When you switch to a new tab,
+                other VIEWD tabs pause
+              </p>
+            </div>
+            <button
+              onClick={() => { const v = !pauseBg; setPauseBg(v); setPauseBgTabs(v); }}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${pauseBg ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${pauseBg ? 'translate-x-5' : ''}`} />
+            </button>
+          </label>
         </div>
       </section>
 

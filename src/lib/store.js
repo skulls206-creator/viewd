@@ -5,6 +5,8 @@ const defaultStore = {
   playlists: [],
   theme: 'system',
   instance: '',
+  preventBgAutoplay: true,
+  pauseBgTabs: true,
 };
 
 function read() {
@@ -108,6 +110,27 @@ export function getSavedInstance() {
 export function saveInstance(url) {
   const data = read();
   data.instance = url;
+  write(data);
+}
+
+// Background tab behavior
+export function getPreventBgAutoplay() {
+  return read().preventBgAutoplay;
+}
+
+export function setPreventBgAutoplay(val) {
+  const data = read();
+  data.preventBgAutoplay = val;
+  write(data);
+}
+
+export function getPauseBgTabs() {
+  return read().pauseBgTabs;
+}
+
+export function setPauseBgTabs(val) {
+  const data = read();
+  data.pauseBgTabs = val;
   write(data);
 }
 

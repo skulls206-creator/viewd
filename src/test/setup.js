@@ -41,6 +41,19 @@ Object.defineProperty(window, 'matchMedia', {
 // Mock scrollTo
 window.scrollTo = () => {};
 
+// Mock BroadcastChannel
+if (!globalThis.BroadcastChannel) {
+  class MockBroadcastChannel {
+    constructor(name) { this.name = name; this.onmessage = null; }
+    postMessage(msg) { /* no-op in tests */ }
+    close() {}
+  }
+  globalThis.BroadcastChannel = MockBroadcastChannel;
+}
+
+// Mock document.hidden
+Object.defineProperty(document, 'hidden', { value: false, writable: true });
+
 // Mock IntersectionObserver
 class MockIntersectionObserver {
   constructor() { this.observe = () => {}; this.unobserve = () => {}; this.disconnect = () => {}; }

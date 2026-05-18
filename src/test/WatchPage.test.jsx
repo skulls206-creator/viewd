@@ -22,6 +22,8 @@ vi.mock('../lib/store.js', () => ({
   getPlaylists: vi.fn(() => []),
   addToPlaylist: vi.fn(),
   addToHistory: vi.fn(),
+  getPreventBgAutoplay: vi.fn(() => false),
+  getPauseBgTabs: vi.fn(() => false),
 }));
 
 import { useVideo } from '../hooks/useInvidious.js';

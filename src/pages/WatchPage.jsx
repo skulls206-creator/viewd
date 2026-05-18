@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
-import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory } from '../lib/store.js';
+import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs } from '../lib/store.js';
 import CommentCard from '../components/CommentCard.jsx';
 
 export default function WatchPage() {
@@ -20,6 +20,54 @@ export default function WatchPage() {
   const [playlists, setPlaylists] = useState([]);
   const playerRef = useRef(null);
   const playlistRef = useRef(null);
+  const bgChannelRef = useRef(null);
+
+  // Helper: post message to the YouTube iframe
+  function postToPlayer(msg) {
+    const iframe = document.querySelector('#player iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(JSON.stringify(msg), '*');
+    }
+  }
+
+  function pauseIframe() {
+    postToPlayer({ event: 'command', func: 'pauseVideo', args: '' });
+  }
+
+  // Cross-tab background pause via BroadcastChannel
+  useEffect(() => {
+    const chan = new BroadcastChannel('viewd-video');
+    bgChannelRef.current = chan;
+    chan.onmessage = (e) => {
+      if (e.data === 'pause') pauseIframe();
+    };
+    return () => chan.close();
+  }, []);
+
+  // Visibility-based pause + autoplay prevention
+  useEffect(() => {
+    const preventBg = getPreventBgAutoplay();
+    const pauseBg = getPauseBgTabs();
+    if (!preventBg && !pauseBg) return;
+
+    function onVisibilityChange() {
+      if (document.hidden) {
+        if (pauseBg) pauseIframe();
+      } else {
+        // Tab came to foreground — tell other tabs to pause
+        try {
+          bgChannelRef.current?.postMessage('pause');
+        } catch {}
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, []);
+
+  // Should we autoplay? Depends on setting + whether we're the active tab
+  const shouldAutoplay = !getPreventBgAutoplay() || !document.hidden;
+  const autoplayQuery = shouldAutoplay ? 'autoplay=1' : 'autoplay=0';
 
   useEffect(() => {
     if (video) {
@@ -198,7 +246,7 @@ export default function WatchPage() {
       <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">
         <div className="aspect-video rounded-xl overflow-hidden bg-black mb-6">
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?${autoplayQuery}&rel=0`}
             className="w-full h-full"
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             allowFullScreen
@@ -218,7 +266,7 @@ export default function WatchPage() {
         <div className={`${theater ? 'w-full' : 'lg:w-[65%]'}`}>
           <div id="player" ref={playerRef} className="relative aspect-video rounded-xl overflow-hidden bg-black mb-4">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?${autoplayQuery}&rel=0`}
               className="absolute inset-0 w-full h-full"
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
