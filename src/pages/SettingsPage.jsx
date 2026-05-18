@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance } from '../lib/store.js';
-import { getInstance, setInstance as setApiInstance, fetchInstances, checkHealth, instanceDisplay } from '../lib/invidious.js';
+import { getInstance, setInstanceManual as setApiInstance, fetchInstances, checkHealth, instanceDisplay } from '../lib/invidious.js';
 import { useInstances, useHealthCheck } from '../hooks/useInvidious.js';
 
 export default function SettingsPage() {

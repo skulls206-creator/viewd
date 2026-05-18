@@ -51,6 +51,13 @@ export function setInstance(url) {
   if (old !== currentInstance) emitChange(old, currentInstance);
 }
 
+export function setInstanceManual(url) {
+  const old = currentInstance;
+  currentInstance = url.replace(/\/+$/, '');
+  localStorage.setItem('viewd_instance', currentInstance);
+  // Manual changes don't trigger the auto-failover banner
+}
+
 async function checkAndResetIfDead(url) {
   try {
     const res = await fetch(`${url}/api/v1/search?q=test&page=1`, {
