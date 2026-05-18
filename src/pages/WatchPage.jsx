@@ -183,11 +183,21 @@ export default function WatchPage() {
     );
   }
 
-  if (error) {
+  if (error && !video) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-secondary)]">
-        <p className="mb-2">Failed to load video.</p>
-        <p className="text-xs">The instance may be unavailable. Try changing it in Settings.</p>
+      <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">
+        <div className="aspect-video rounded-xl overflow-hidden bg-black mb-6">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+            className="w-full h-full"
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            title="Video player"
+          />
+        </div>
+        <p className="text-sm text-[var(--color-text-secondary)] text-center">
+          Video detail could not be loaded from this instance, but you can still watch below.
+        </p>
       </div>
     );
   }
