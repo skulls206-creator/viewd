@@ -308,9 +308,20 @@ export default function WatchPage() {
             title="Video player"
           />
         </div>
-        <p className="text-sm text-[var(--color-text-secondary)] text-center">
-          Video detail could not be loaded from this instance, but you can still watch above.
+        <p className="text-sm text-[var(--color-text-secondary)] text-center mb-3">
+          Invidious can't retrieve details for this video — the player still works.
         </p>
+        <div className="text-center">
+          <a
+            href={`https://www.youtube.com/watch?v=${videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0C.488 3.45.029 5.804 0 12c.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0C23.512 20.55 23.971 18.196 24 12c-.029-6.185-.484-8.549-4.385-8.816zM9 16V8l8 4-8 4z"/></svg>
+            Watch on YouTube
+          </a>
+        </div>
       </div>
     );
   }
