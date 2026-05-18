@@ -109,27 +109,56 @@ describe('ChannelPage — Channel Video Sort', () => {
   // THE BUG: API returns {videos: [...], continuation} and the component
   // doesn't unwrap it properly for sort changes
   it('BUG DEMONSTRATION: getChannelVideos returns unwrapped array but component uses data directly', () => {
-    // The bug is in the hook — useChannelVideos calls getChannelVideos which
-    // unwraps the API's {videos: [...], continuation} response.
-    // The component renders `videos?.map(...)` assuming data is already an array.
-    // If the hook returned {videos: [...], continuation} directly, the map would
-    // silently render nothing or error.
-
-    // Mock the unwrapped response (what should happen)
     useChannelVideos.mockReturnValue({ data: mockVideos, isLoading: false });
     renderChannel();
-
-    // Should see video titles rendered
     expect(screen.getByText('Test Video 0')).toBeInTheDocument();
     expect(screen.getByText('Test Video 9')).toBeInTheDocument();
 
-    // Now simulate the BUG: hook returns the raw API response (object with .videos)
     useChannelVideos.mockReturnValue({
       data: { videos: mockVideos, continuation: 'abc123' },
       isLoading: false,
     });
+  });
 
-    // Re-render wouldn't show videos because component does `videos?.map(...)`
-    // and an object doesn't have .map
+  it('shows error message when channel fails', () => {
+    useChannel.mockReturnValue({ data: null, isLoading: false, error: new Error('Fail') });
+    useChannelVideos.mockReturnValue({ data: [], isLoading: false });
+    renderChannel();
+    expect(screen.getByText('Failed to load channel.')).toBeInTheDocument();
+  });
+
+  it('shows loading skeleton', () => {
+    useChannel.mockReturnValue({ data: null, isLoading: true, error: null });
+    useChannelVideos.mockReturnValue({ data: [], isLoading: true });
+    renderChannel();
+    expect(document.querySelector('.skeleton')).toBeInTheDocument();
+  });
+
+  it('handles undefined videos without crashing', () => {
+    useChannel.mockReturnValue({ data: mockChannel, isLoading: false, error: null });
+    useChannelVideos.mockReturnValue({ data: undefined, isLoading: false, error: new Error('Videos fail') });
+    renderChannel();
+    // Should render channel info without crashing — use heading role to be specific
+    expect(screen.getByRole('heading', { name: 'Test Channel' })).toBeInTheDocument();
+  });
+
+  it('handles channel with no thumbnails gracefully', () => {
+    useChannel.mockReturnValue({
+      data: { ...mockChannel, authorThumbnails: [] },
+      isLoading: false, error: null,
+    });
+    useChannelVideos.mockReturnValue({ data: mockVideos, isLoading: false });
+    renderChannel();
+    expect(screen.getByRole('heading', { name: 'Test Channel' })).toBeInTheDocument();
+  });
+
+  it('handles channel with no description gracefully', () => {
+    useChannel.mockReturnValue({
+      data: { ...mockChannel, description: '' },
+      isLoading: false, error: null,
+    });
+    useChannelVideos.mockReturnValue({ data: mockVideos, isLoading: false });
+    renderChannel();
+    expect(screen.getByRole('heading', { name: 'Test Channel' })).toBeInTheDocument();
   });
 });
