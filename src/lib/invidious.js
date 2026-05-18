@@ -216,14 +216,34 @@ export async function getComments(videoId, continuation = null) {
 }
 
 export async function getChannel(channelId, sortBy = 'newest', page = 1) {
-  return fetchApi(`/channels/${channelId}`, { sort_by: sortBy, page });
+  const qs = new URLSearchParams({ sort_by: sortBy, page }).toString();
+  const path = `/api/v1/channels/${channelId}?${qs}`;
+  try {
+    return await fetchApi(`/channels/${channelId}`, { sort_by: sortBy, page });
+  } catch (err) {
+    try {
+      return await fallbackToOtherInstance(path);
+    } catch {
+      throw err;
+    }
+  }
 }
 
 export async function getChannelVideos(channelId, sortBy = 'newest', page = 1) {
-  const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
-  if (data && Array.isArray(data.videos)) return data.videos;
-  if (Array.isArray(data)) return data;
-  return [];
+  const qs = new URLSearchParams({ sort_by: sortBy, page }).toString();
+  const path = `/api/v1/channels/${channelId}/videos?${qs}`;
+  try {
+    const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
+    if (data && Array.isArray(data.videos)) return data.videos;
+    if (Array.isArray(data)) return data;
+    return [];
+  } catch (err) {
+    try {
+      return await fallbackToOtherInstance(path);
+    } catch {
+      throw err;
+    }
+  }
 }
 
 export async function getPlaylist(playlistId, page = 1) {
