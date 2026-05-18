@@ -11,9 +11,8 @@ export function onInstanceChange(fn) {
 // Instance records: { url, label? } — label is shown in Settings instead of the raw URL
 const INSTANCE_RECORDS = [
   { url: 'https://inv.thepixora.com', label: 'The Pixora' },
+  { url: 'https://viewd.replit.app', label: 'VIEWD Instance' },
 ];
-
-// Add your VPS here once you DM the URL + label
 
 // URLs only — used for auto-failover iteration
 const KNOWN_INSTANCES = INSTANCE_RECORDS.map((r) => r.url);
