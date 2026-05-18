@@ -8,10 +8,18 @@ export function onInstanceChange(fn) {
   return () => instanceChangeListeners.delete(fn);
 }
 
-// Curated list of instances with working APIs and CORS support.
-const KNOWN_INSTANCES = [
+// Instances shown publicly in Settings (and used for auto-failover)
+const PUBLIC_INSTANCES = [
   'https://inv.thepixora.com',
 ];
+
+// Private instances — used for auto-failover but NOT shown in Settings
+const PRIVATE_INSTANCES = [
+  // Add private VPS instances here
+];
+
+// All known instances combined (for auto-failover)
+const KNOWN_INSTANCES = [...PUBLIC_INSTANCES, ...PRIVATE_INSTANCES];
 
 const DEFAULT_INSTANCE = KNOWN_INSTANCES[0];
 const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
@@ -183,7 +191,8 @@ export async function fetchInstances() {
   const seen = new Set();
   const merged = [];
 
-  for (const url of KNOWN_INSTANCES) {
+  // Only include PUBLIC instances in the Settings list
+  for (const url of PUBLIC_INSTANCES) {
     if (!seen.has(url)) {
       seen.add(url);
       merged.push({ url, flag: '', stats: {} });
