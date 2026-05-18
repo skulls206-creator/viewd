@@ -12,7 +12,6 @@ export function onInstanceChange(fn) {
 // When the official instance list returns no usable entries, these are tried.
 const KNOWN_INSTANCES = [
   'https://inv.thepixora.com',
-  'http://89.117.59.70:3000', // VIEWD proxy (VPS) — fastest, dedicated
 ];
 
 const DEFAULT_INSTANCE = KNOWN_INSTANCES[0]; // https://inv.thepixora.com
