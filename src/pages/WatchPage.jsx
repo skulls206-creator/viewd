@@ -317,7 +317,7 @@ export default function WatchPage() {
 
   return (
     <div className={`p-4 sm:p-6 ${theater ? 'max-w-full' : 'max-w-[1400px]'} mx-auto`}>
-      <div className="lg:flex gap-6">
+      <div className={`${theater ? '' : 'lg:flex'} gap-6`}>
         <div ref={playerContainerRef} className={`${theater ? 'w-full' : 'lg:w-[65%]'}`}>
           <div id="player" ref={playerRef} className="relative aspect-video rounded-xl overflow-hidden bg-black mb-4">
             <iframe
@@ -535,8 +535,8 @@ export default function WatchPage() {
           </div>
         </div>
 
-        {/* Sidebar — recommended */}
-        <div className="hidden lg:block lg:w-[35%]">
+        {/* Sidebar — recommended (hidden in theater mode) */}
+        <div className={`${theater ? 'hidden' : 'hidden lg:block'} lg:w-[35%]`}>
           {video?.recommendedVideos?.length > 0 && (
             <div className="space-y-3">
               {video.recommendedVideos.filter((v) => v.videoId).map((v) => (
@@ -563,6 +563,34 @@ export default function WatchPage() {
             </div>
           )}
         </div>
+
+        {/* Recommended videos below player (theater mode only) */}
+        {theater && video?.recommendedVideos?.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 uppercase tracking-wider">Up next</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {video.recommendedVideos.filter((v) => v.videoId).map((v) => (
+                <Link key={v.videoId} to={`/watch?v=${v.videoId}`} className="group">
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-[var(--color-surface)] mb-1.5">
+                    {v.videoThumbnails?.length > 0 ? (
+                      <img src={getBestThumbnail(v.videoThumbnails)} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-[var(--color-text-secondary)]">No thumb</div>
+                    )}
+                    {v.lengthSeconds > 0 && (
+                      <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/80 text-white text-[10px] font-medium">
+                        {formatDuration(v.lengthSeconds)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-[var(--color-text)] line-clamp-2 leading-tight group-hover:text-[var(--color-primary)]">{v.title}</p>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{v.author}</p>
+                  <p className="text-xs text-[var(--color-text-secondary)]">{formatViews(v.viewCount)} views</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Floating mini-player */}
