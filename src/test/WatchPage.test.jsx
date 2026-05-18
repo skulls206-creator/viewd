@@ -24,6 +24,16 @@ vi.mock('../lib/store.js', () => ({
   addToHistory: vi.fn(),
   getPreventBgAutoplay: vi.fn(() => false),
   getPauseBgTabs: vi.fn(() => false),
+  getLoopMode: vi.fn(() => false),
+  setLoopMode: vi.fn(),
+  getHideComments: vi.fn(() => false),
+  setHideComments: vi.fn(),
+  getPlaybackSpeed: vi.fn(() => 1),
+  setPlaybackSpeed: vi.fn(),
+  getAccentColor: vi.fn(() => ''),
+  setAccentColor: vi.fn(),
+  getMiniPlayer: vi.fn(() => true),
+  setMiniPlayer: vi.fn(),
 }));
 
 import { useVideo } from '../hooks/useInvidious.js';

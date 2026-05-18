@@ -70,6 +70,46 @@ input, select, button {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* Floating mini-player */
+.mini-player {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 360px;
+  height: 203px;
+  z-index: 100;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  animation: miniPlayerIn 0.3s ease;
+}
+
+.mini-player:hover {
+  transform: scale(1.03);
+}
+
+@keyframes miniPlayerIn {
+  from {
+    transform: translateY(100px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .mini-player {
+    bottom: 12px;
+    right: 12px;
+    width: 240px;
+    height: 135px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;

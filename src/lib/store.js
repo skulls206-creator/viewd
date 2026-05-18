@@ -7,6 +7,11 @@ const defaultStore = {
   instance: '',
   preventBgAutoplay: true,
   pauseBgTabs: true,
+  loopMode: false,
+  hideComments: false,
+  playbackSpeed: 1,
+  accentColor: '',
+  miniPlayer: true,
 };
 
 function read() {
@@ -132,6 +137,63 @@ export function setPauseBgTabs(val) {
   const data = read();
   data.pauseBgTabs = val;
   write(data);
+}
+
+// Loop mode
+export function getLoopMode() {
+  return read().loopMode;
+}
+export function setLoopMode(val) {
+  const data = read(); data.loopMode = val; write(data);
+}
+
+// Hide comments by default
+export function getHideComments() {
+  return read().hideComments;
+}
+export function setHideComments(val) {
+  const data = read(); data.hideComments = val; write(data);
+}
+
+// Default playback speed
+export function getPlaybackSpeed() {
+  return read().playbackSpeed;
+}
+export function setPlaybackSpeed(val) {
+  const data = read(); data.playbackSpeed = val; write(data);
+}
+
+// Accent color
+export function getAccentColor() {
+  return read().accentColor;
+}
+export function setAccentColor(val) {
+  const data = read(); data.accentColor = val; write(data);
+  applyAccentColor(val);
+}
+export function applyAccentColor(color) {
+  if (color) {
+    const darker = darkenColor(color, 0.75);
+    document.documentElement.style.setProperty('--color-primary', color);
+    document.documentElement.style.setProperty('--color-primary-hover', darker);
+  } else {
+    document.documentElement.style.removeProperty('--color-primary');
+    document.documentElement.style.removeProperty('--color-primary-hover');
+  }
+}
+function darkenColor(hex, factor) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return '#' + [r,g,b].map(c => Math.round(c * factor).toString(16).padStart(2,'0')).join('');
+}
+
+// Mini player
+export function getMiniPlayer() {
+  return read().miniPlayer;
+}
+export function setMiniPlayer(val) {
+  const data = read(); data.miniPlayer = val; write(data);
 }
 
 // History — last 50 watched videos

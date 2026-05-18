@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
-import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs } from '../lib/store.js';
+import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs, getLoopMode, setLoopMode, getHideComments, getPlaybackSpeed } from '../lib/store.js';
 import CommentCard from '../components/CommentCard.jsx';
 
 export default function WatchPage() {
@@ -20,7 +20,12 @@ export default function WatchPage() {
   const [playlists, setPlaylists] = useState([]);
   const playerRef = useRef(null);
   const playlistRef = useRef(null);
+  const playerContainerRef = useRef(null);
   const bgChannelRef = useRef(null);
+  const [loopActive, setLoopActive] = useState(getLoopMode());
+  const [commentsHidden, setCommentsHidden] = useState(getHideComments());
+  const [miniPlayerVisible, setMiniPlayerVisible] = useState(false);
+  const miniObservedRef = useRef(null);
 
   // Helper: post message to the YouTube iframe
   function postToPlayer(msg) {
@@ -68,6 +73,56 @@ export default function WatchPage() {
   // Should we autoplay? Depends on setting + whether we're the active tab
   const shouldAutoplay = !getPreventBgAutoplay() || !document.hidden;
   const autoplayQuery = shouldAutoplay ? 'autoplay=1' : 'autoplay=0';
+
+  // Loop mode: listen for YouTube iframe state changes
+  useEffect(() => {
+    function onMessage(e) {
+      if (!getLoopMode()) return;
+      try {
+        const data = JSON.parse(e.data);
+        if (data.event === 'onStateChange' && data.info === 0) {
+          // Video ended — seek to 0 and play
+          const iframe = document.querySelector('#player iframe');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0] }), '*');
+            setTimeout(() => {
+              iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: '' }), '*');
+            }, 100);
+          }
+        }
+      } catch {}
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  // Default playback speed
+  useEffect(() => {
+    if (!video) return;
+    const speed = getPlaybackSpeed();
+    if (speed === 1) return;
+    const timer = setTimeout(() => {
+      const iframe = document.querySelector('#player iframe');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackRate', args: [speed] }), '*');
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [video]);
+
+  // Mini-player: IntersectionObserver on player
+  useEffect(() => {
+    const el = playerContainerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setMiniPlayerVisible(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [videoId]);
 
   useEffect(() => {
     if (video) {
@@ -263,7 +318,7 @@ export default function WatchPage() {
   return (
     <div className={`p-4 sm:p-6 ${theater ? 'max-w-full' : 'max-w-[1400px]'} mx-auto`}>
       <div className="lg:flex gap-6">
-        <div className={`${theater ? 'w-full' : 'lg:w-[65%]'}`}>
+        <div ref={playerContainerRef} className={`${theater ? 'w-full' : 'lg:w-[65%]'}`}>
           <div id="player" ref={playerRef} className="relative aspect-video rounded-xl overflow-hidden bg-black mb-4">
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${videoId}?${autoplayQuery}&rel=0`}
@@ -353,6 +408,15 @@ export default function WatchPage() {
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
                 </button>
+                <button
+                  onClick={() => { const v = !loopActive; setLoopActive(v); setLoopMode(v); }}
+                  className={`px-3 py-2 rounded-full text-sm transition-colors ${
+                    loopActive ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-surface-hover)]'
+                  }`}
+                  title="Loop video"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                </button>
               </div>
             </div>
 
@@ -409,9 +473,28 @@ export default function WatchPage() {
             )}
 
             {/* Comments */}
-            {comments.length > 0 && (
+            {commentsHidden && comments.length > 0 ? (
               <div className="mt-6">
-                <h2 className="text-base font-bold text-[var(--color-text)] mb-4">Comments</h2>
+                <button
+                  onClick={() => setCommentsHidden(false)}
+                  className="w-full py-3 rounded-xl border border-[var(--color-border)] text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-surface)]"
+                >
+                  Show {comments.length} comment{comments.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            ) : (comments.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-bold text-[var(--color-text)]">Comments</h2>
+                  {getHideComments() && (
+                    <button
+                      onClick={() => setCommentsHidden(true)}
+                      className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                    >
+                      Hide
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-4">
                   {comments.map((comment, i) => (
                     <CommentCard key={comment.commentId || i} comment={comment} />
@@ -427,7 +510,7 @@ export default function WatchPage() {
                   </button>
                 )}
               </div>
-            )}
+            ))}
           </div>
 
           {/* Keyboard shortcuts hint */}
@@ -481,6 +564,28 @@ export default function WatchPage() {
           )}
         </div>
       </div>
+
+      {/* Floating mini-player */}
+      {miniPlayerVisible && videoId && (
+        <div
+          className="mini-player"
+          onClick={() => window.location.hash = `#/watch?v=${videoId}`}
+          title="Click to go to watch page"
+        >
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1`}
+            className="w-full h-full pointer-events-none"
+            allow="autoplay; encrypted-media"
+            title="Mini player"
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setMiniPlayerVisible(false); }}
+            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

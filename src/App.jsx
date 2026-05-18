@@ -12,7 +12,7 @@ import SubscriptionsPage from './pages/SubscriptionsPage.jsx';
 import TrendingPage from './pages/TrendingPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
-import { applyTheme, getTheme } from './lib/store.js';
+import { applyTheme, getTheme, getAccentColor, applyAccentColor } from './lib/store.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +28,8 @@ export default function App() {
 
   useEffect(() => {
     applyTheme(getTheme());
+    const accent = getAccentColor();
+    if (accent) applyAccentColor(accent);
   }, []);
 
   return (

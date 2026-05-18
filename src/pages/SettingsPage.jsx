@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance, getPreventBgAutoplay, setPreventBgAutoplay, getPauseBgTabs, setPauseBgTabs } from '../lib/store.js';
+import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance, getPreventBgAutoplay, setPreventBgAutoplay, getPauseBgTabs, setPauseBgTabs, getLoopMode, setLoopMode, getHideComments, setHideComments, getPlaybackSpeed, setPlaybackSpeed, getAccentColor, setAccentColor, getMiniPlayer, setMiniPlayer } from '../lib/store.js';
 import { getInstance, setInstanceManual as setApiInstance, fetchInstances, checkHealth, instanceDisplay } from '../lib/invidious.js';
 import { useInstances, useHealthCheck } from '../hooks/useInvidious.js';
 
@@ -13,6 +13,11 @@ export default function SettingsPage() {
   const { data: publicInstances } = useInstances();
   const [preventBg, setPreventBg] = useState(getPreventBgAutoplay());
   const [pauseBg, setPauseBg] = useState(getPauseBgTabs());
+  const [loopMode, setLoopModeState] = useState(getLoopMode());
+  const [hideComments, setHideCommentsState] = useState(getHideComments());
+  const [playbackSpeed, setPlaybackSpeedState] = useState(getPlaybackSpeed());
+  const [accentColor, setAccentColorState] = useState(getAccentColor());
+  const [miniPlayer, setMiniPlayerState] = useState(getMiniPlayer());
 
   useEffect(() => {
     applyTheme(theme);
@@ -192,8 +197,7 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium text-[var(--color-text)]">Pause background tabs</p>
               <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                When you switch away, video pauses. When you switch to a new tab,
-                other VIEWD tabs pause
+                When you switch away, video pauses. Other VIEWD tabs also pause
               </p>
             </div>
             <button
@@ -203,6 +207,91 @@ export default function SettingsPage() {
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${pauseBg ? 'translate-x-5' : ''}`} />
             </button>
           </label>
+          <label className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Loop video</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                Automatically replay videos when they end
+              </p>
+            </div>
+            <button
+              onClick={() => { const v = !loopMode; setLoopModeState(v); setLoopMode(v); }}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${loopMode ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${loopMode ? 'translate-x-5' : ''}`} />
+            </button>
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Hide comments by default</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                Comments start collapsed with a "Show comments" button
+              </p>
+            </div>
+            <button
+              onClick={() => { const v = !hideComments; setHideCommentsState(v); setHideComments(v); }}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${hideComments ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${hideComments ? 'translate-x-5' : ''}`} />
+            </button>
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] cursor-pointer hover:border-[var(--color-primary)] transition-colors">
+            <div>
+              <p className="text-sm font-medium text-[var(--color-text)]">Floating mini-player</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                When scrolling past the player, it floats in the corner
+              </p>
+            </div>
+            <button
+              onClick={() => { const v = !miniPlayer; setMiniPlayerState(v); setMiniPlayer(v); }}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${miniPlayer ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-border)]'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${miniPlayer ? 'translate-x-5' : ''}`} />
+            </button>
+          </label>
+
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+            <p className="text-sm font-medium text-[var(--color-text)] mb-3">Default playback speed</p>
+            <div className="flex flex-wrap gap-2">
+              {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { setPlaybackSpeedState(s); setPlaybackSpeed(s); }}
+                  className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+                    playbackSpeed === s
+                      ? 'border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-text)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)]'
+                  }`}
+                >
+                  {s}x
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+            <p className="text-sm font-medium text-[var(--color-text)] mb-3">Accent color</p>
+            <div className="flex flex-wrap gap-2 items-center">
+              {['', '#cc0000', '#ff4444', '#06b6d4', '#22c55e', '#a855f7', '#f59e0b', '#3b82f6'].map((c) => (
+                <button
+                  key={c || 'default'}
+                  onClick={() => { setAccentColorState(c); setAccentColor(c); }}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    accentColor === c ? 'border-[var(--color-text)] scale-110' : 'border-transparent'
+                  }`}
+                  style={{ background: c || 'var(--color-text)' }}
+                  title={c || 'Default (red)'}
+                />
+              ))}
+              <input
+                type="color"
+                value={accentColor || '#cc0000'}
+                onChange={(e) => { setAccentColorState(e.target.value); setAccentColor(e.target.value); }}
+                className="w-8 h-8 rounded-full border-0 cursor-pointer"
+                title="Custom color"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
