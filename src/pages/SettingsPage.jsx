@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTheme, setTheme, applyTheme, getSavedInstance, saveInstance } from '../lib/store.js';
-import { getInstance, setInstance as setApiInstance, fetchInstances, checkHealth } from '../lib/invidious.js';
+import { getInstance, setInstance as setApiInstance, fetchInstances, checkHealth, instanceDisplay } from '../lib/invidious.js';
 import { useInstances, useHealthCheck } from '../hooks/useInvidious.js';
 
 export default function SettingsPage() {
@@ -94,7 +94,7 @@ export default function SettingsPage() {
               }}
               title="Click to copy"
             >
-              {apiInstances}
+              {instanceDisplay(apiInstances)}
             </p>
             {copied && (
               <span className="absolute -top-1 right-0 text-[10px] font-medium text-green-500">
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-[var(--color-text)] truncate text-xs">{inst.url}</span>
+                    <span className="text-sm text-[var(--color-text)] truncate">{inst.label || inst.url}</span>
                     {inst.flag && <span className="text-xs text-[var(--color-text-secondary)]">{inst.flag}</span>}
                   </div>
                 </button>

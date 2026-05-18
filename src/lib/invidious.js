@@ -8,18 +8,19 @@ export function onInstanceChange(fn) {
   return () => instanceChangeListeners.delete(fn);
 }
 
-// Instances shown publicly in Settings (and used for auto-failover)
-const PUBLIC_INSTANCES = [
-  'https://inv.thepixora.com',
+// Instance records: { url, label? } — label is shown in Settings instead of the raw URL
+const INSTANCE_RECORDS = [
+  { url: 'https://inv.thepixora.com', label: 'The Pixora' },
 ];
 
-// Private instances — used for auto-failover but NOT shown in Settings
-const PRIVATE_INSTANCES = [
-  // Add private VPS instances here
-];
+// URLs only — used for auto-failover iteration
+const KNOWN_INSTANCES = INSTANCE_RECORDS.map((r) => r.url);
 
-// All known instances combined (for auto-failover)
-const KNOWN_INSTANCES = [...PUBLIC_INSTANCES, ...PRIVATE_INSTANCES];
+// For Settings display: only the label, or the URL if no label
+export function instanceDisplay(url) {
+  const record = INSTANCE_RECORDS.find((r) => r.url === url);
+  return record?.label || url;
+}
 
 const DEFAULT_INSTANCE = KNOWN_INSTANCES[0];
 const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
@@ -191,11 +192,11 @@ export async function fetchInstances() {
   const seen = new Set();
   const merged = [];
 
-  // Only include PUBLIC instances in the Settings list
-  for (const url of PUBLIC_INSTANCES) {
-    if (!seen.has(url)) {
-      seen.add(url);
-      merged.push({ url, flag: '', stats: {} });
+  // Include labeled instances in the Settings list
+  for (const rec of INSTANCE_RECORDS) {
+    if (!seen.has(rec.url)) {
+      seen.add(rec.url);
+      merged.push({ url: rec.url, label: rec.label, flag: '', stats: {} });
     }
   }
 
