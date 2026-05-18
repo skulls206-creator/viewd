@@ -13,6 +13,8 @@ const INSTANCE_RECORDS = [
   { url: 'https://inv.thepixora.com', label: 'The Pixora' },
 ];
 
+// Add your VPS here once you DM the URL + label
+
 // URLs only — used for auto-failover iteration
 const KNOWN_INSTANCES = INSTANCE_RECORDS.map((r) => r.url);
 
