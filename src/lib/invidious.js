@@ -215,6 +215,21 @@ export async function getComments(videoId, continuation = null) {
   }
 }
 
+export async function getChannel(channelId, sortBy = 'newest', page = 1) {
+  return fetchApi(`/channels/${channelId}`, { sort_by: sortBy, page });
+}
+
+export async function getChannelVideos(channelId, sortBy = 'newest', page = 1) {
+  const data = await fetchApi(`/channels/${channelId}/videos`, { sort_by: sortBy, page });
+  if (data && Array.isArray(data.videos)) return data.videos;
+  if (Array.isArray(data)) return data;
+  return [];
+}
+
+export async function getPlaylist(playlistId, page = 1) {
+  return fetchApi(`/playlists/${playlistId}`, { page });
+}
+
 export async function getPopular() {
   return fetchApi('/popular');
 }
