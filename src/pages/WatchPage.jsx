@@ -50,6 +50,7 @@ export default function WatchPage() {
   }, []);
 
   // Visibility-based pause + autoplay prevention
+  // + broadcast 'pause' on user interaction (so clicking play mutes other tabs)
   useEffect(() => {
     const preventBg = getPreventBgAutoplay();
     const pauseBg = getPauseBgTabs();
@@ -59,15 +60,28 @@ export default function WatchPage() {
       if (document.hidden) {
         if (pauseBg) pauseIframe();
       } else {
-        // Tab came to foreground — tell other tabs to pause
         try {
           bgChannelRef.current?.postMessage('pause');
         } catch {}
       }
     }
 
+    function onUserInteraction() {
+      if (!pauseBg) return;
+      try {
+        bgChannelRef.current?.postMessage('pause');
+      } catch {}
+    }
+
     document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener('click', onUserInteraction);
+    document.addEventListener('keydown', onUserInteraction);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      document.removeEventListener('click', onUserInteraction);
+      document.removeEventListener('keydown', onUserInteraction);
+    };
   }, []);
 
   // Should we autoplay? Depends on setting + whether we're the active tab
