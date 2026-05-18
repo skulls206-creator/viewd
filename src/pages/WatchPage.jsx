@@ -4,6 +4,7 @@ import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
 import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory } from '../lib/store.js';
+import CommentCard from '../components/CommentCard.jsx';
 
 export default function WatchPage() {
   const [searchParams] = useSearchParams();
@@ -365,30 +366,7 @@ export default function WatchPage() {
                 <h2 className="text-base font-bold text-[var(--color-text)] mb-4">Comments</h2>
                 <div className="space-y-4">
                   {comments.map((comment, i) => (
-                    <div key={comment.commentId || i} className="flex gap-3">
-                      {comment.authorThumbnails?.length > 0 ? (
-                        <img src={getBestAvatar(comment.authorThumbnails)} alt="" className="w-8 h-8 rounded-full shrink-0" />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-[var(--color-surface)] shrink-0" />
-                      )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-[var(--color-text)]">{comment.author}</span>
-                          <span className="text-xs text-[var(--color-text-secondary)]">
-                            {comment.publishedText || formatPublished(comment.published)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-[var(--color-text)] mt-0.5" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                          {comment.content}
-                        </p>
-                        {comment.likeCount > 0 && (
-                          <div className="flex items-center gap-1 mt-1 text-xs text-[var(--color-text-secondary)]">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-                            {comment.likeCount}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <CommentCard key={comment.commentId || i} comment={comment} />
                   ))}
                 </div>
                 {commentContinuation && (
