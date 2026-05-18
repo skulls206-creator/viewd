@@ -5,6 +5,7 @@ import { useInstances, useHealthCheck } from '../hooks/useInvidious.js';
 
 export default function SettingsPage() {
   const [theme, setThemeState] = useState(getTheme());
+  const [copied, setCopied] = useState(false);
   const [apiInstances, setApiInstances] = useState(getInstance());
   const [testingHealth, setTestingHealth] = useState(false);
   const [healthResult, setHealthResult] = useState(null);
