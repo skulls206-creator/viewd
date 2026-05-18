@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
 import { getComments } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
-import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs, getLoopMode, setLoopMode, getHideComments, getPlaybackSpeed } from '../lib/store.js';
+import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs, getLoopMode, setLoopMode, getHideComments, getPlaybackSpeed, getMiniPlayer } from '../lib/store.js';
 import CommentCard from '../components/CommentCard.jsx';
 
 export default function WatchPage() {
@@ -124,10 +124,11 @@ export default function WatchPage() {
     return () => clearTimeout(timer);
   }, [video]);
 
-  // Mini-player: IntersectionObserver on player
+  // Mini-player: IntersectionObserver on the player element itself
   useEffect(() => {
-    const el = playerContainerRef.current;
+    const el = document.querySelector('#player');
     if (!el) return;
+    if (!getMiniPlayer()) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setMiniPlayerVisible(!entry.isIntersecting);
