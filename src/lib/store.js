@@ -1,6 +1,16 @@
+// ⚠️  Single localStorage key for ALL settings ('viewd_store').
+// Consider migrating to multiple keys or adding a version number to enable
+// schema migrations. The read() function below handles JSON corruption
+// gracefully by falling back to defaults.
+//
+// TODO: Add version field to schema for future migration support.
+// Usage: read().version → if stale, migrate and write back.
+
 const STORE_KEY = 'viewd_store';
+const STORE_VERSION = 1;
 
 const defaultStore = {
+  version: STORE_VERSION,
   subscriptions: [],
   playlists: [],
   theme: 'system',
@@ -17,8 +27,12 @@ const defaultStore = {
 function read() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    return raw ? { ...defaultStore, ...JSON.parse(raw) } : { ...defaultStore };
+    if (!raw) return { ...defaultStore };
+    const parsed = JSON.parse(raw);
+    // Ensure default fields exist even if the stored object is incomplete
+    return { ...defaultStore, ...parsed };
   } catch {
+    // JSON parse error or corrupted data — fall back to defaults
     return { ...defaultStore };
   }
 }
@@ -181,7 +195,12 @@ export function applyAccentColor(color) {
     document.documentElement.style.removeProperty('--color-primary-hover');
   }
 }
+function isValidHex(hex) {
+  return typeof hex === 'string' && /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
 function darkenColor(hex, factor) {
+  if (!isValidHex(hex)) return hex || '';
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);

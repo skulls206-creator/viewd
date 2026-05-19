@@ -26,6 +26,18 @@ export function instanceDisplay(url) {
 const DEFAULT_INSTANCE = KNOWN_INSTANCES[0];
 const INSTANCE_LIST_URL = 'https://api.invidious.io/instances.json';
 
+/** Sanitize a search query: strip injection chars, truncate length */
+function sanitizeQuery(q) {
+  if (typeof q !== 'string') return '';
+  return q.trim().replace(/[<>"'&|;$`\\]/g, '').slice(0, 200);
+}
+
+/** Validate a YouTube video ID: exactly 11 chars, alphanumeric + `-_` */
+const YT_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+function isValidVideoId(id) {
+  return typeof id === 'string' && YT_ID_RE.test(id);
+}
+
 let currentInstance = DEFAULT_INSTANCE;
 let discoverRunning = false;
 
@@ -58,6 +70,27 @@ export function setInstanceManual(url) {
   // Manual changes don't trigger the auto-failover banner
 }
 
+/**
+ * Validate that a response body is a JSON array of objects with the expected
+ * Invidious video shape (at minimum, items should have `title` and `videoId`).
+ */
+function isValidVideoList(body) {
+  try {
+    const data = JSON.parse(body);
+    if (!Array.isArray(data)) return false;
+    if (data.length === 0) return true; // empty array is valid
+    // Verify at least the first item has expected video properties
+    const first = data[0];
+    return (
+      typeof first === 'object' &&
+      first !== null &&
+      (typeof first.title === 'string' || typeof first.videoId === 'string')
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function checkAndResetIfDead(url) {
   try {
     const res = await fetch(`${url}/api/v1/search?q=test&page=1`, {
@@ -65,7 +98,7 @@ async function checkAndResetIfDead(url) {
     });
     if (res.ok) {
       const body = await res.text();
-      if (body.trim().startsWith('[')) return;
+      if (isValidVideoList(body)) return;
     }
   } catch {}
   localStorage.removeItem('viewd_instance');
@@ -80,7 +113,9 @@ async function fetchApi(path, params = {}) {
   const url = `${currentInstance}/api/v1${path}${qString ? '?' + qString : ''}`;
 
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    // Aggressive 8s timeout on primary — fail fast so fallback kicks in sooner.
+    // Total round-trip with fallback: ~8s primary + ~10s fallback discovery.
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       throw new Error(text || `HTTP ${res.status}`);
@@ -106,7 +141,7 @@ async function fetchApi(path, params = {}) {
         });
         const ns = nqs.toString();
         const nUrl = `${currentInstance}/api/v1${path}${ns ? '?' + ns : ''}`;
-        const res = await fetch(nUrl, { signal: AbortSignal.timeout(30000) });
+        const res = await fetch(nUrl, { signal: AbortSignal.timeout(8000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       }
@@ -146,7 +181,7 @@ async function discoverAndFailover() {
         });
         if (!res.ok) continue;
         const body = await res.text();
-        if (body.trim().startsWith('[')) {
+        if (isValidVideoList(body)) {
           setInstance(url);
           return true;
         }
@@ -164,7 +199,9 @@ export async function getTrending(region = 'US') {
 }
 
 export async function searchVideos(q, page = 1, sortBy = 'relevance', type = 'video', duration = '', features = '', region = 'US') {
-  return fetchApi('/search', { q, page, sort_by: sortBy, type, duration, features, region });
+  const sanitized = sanitizeQuery(q);
+  if (!sanitized) throw new Error('Invalid search query');
+  return fetchApi('/search', { q: sanitized, page, sort_by: sortBy, type, duration, features, region });
 }
 
 /** Try a different known instance as fallback, avoiding the current one */
@@ -187,6 +224,9 @@ async function fallbackToOtherInstance(path) {
 }
 
 export async function getVideo(id) {
+  if (!isValidVideoId(id)) {
+    throw new Error(`Invalid video ID: ${id}`);
+  }
   const path = `/api/v1/videos/${id}`;
   try {
     return await fetchApi(`/videos/${id}`);
@@ -290,7 +330,7 @@ export async function checkHealth(url) {
     });
     if (!res.ok) return false;
     const body = await res.text();
-    return body.trim().startsWith('[');
+    return isValidVideoList(body);
   } catch {
     return false;
   }
