@@ -10,6 +10,7 @@ export function onInstanceChange(fn) {
 
 // Instance records: { url, label? } — label is shown in Settings instead of the raw URL
 const INSTANCE_RECORDS = [
+  { url: 'https://invidious.oc2.hollr.chat', label: 'Jarvis Instance' },
   { url: 'https://viewd.replit.app', label: 'VIEWD Instance' },
   { url: 'https://inv.thepixora.com', label: 'The Pixora' },
 ];

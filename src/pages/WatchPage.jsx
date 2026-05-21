@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useVideo } from '../hooks/useInvidious.js';
-import { getComments } from '../lib/invidious.js';
+import { getComments, getInstance } from '../lib/invidious.js';
 import { getBestThumbnail, formatDuration, formatViews, formatPublished, abbreviateNumber, getBestAvatar } from '../lib/utils.js';
 import { isSubscribed, subscribe, unsubscribe, getPlaylists, addToPlaylist, addToHistory, getPreventBgAutoplay, getPauseBgTabs, getLoopMode, setLoopMode, getHideComments, getPlaybackSpeed, getMiniPlayer } from '../lib/store.js';
 import CommentCard from '../components/CommentCard.jsx';
@@ -316,7 +316,7 @@ export default function WatchPage() {
       <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">
         <div className="aspect-video rounded-xl overflow-hidden bg-black mb-6">
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?${autoplayQuery}&rel=0`}
+            src={`${getInstance()}/embed/${videoId}?${autoplayQuery}&rel=0`}
             className="w-full h-full"
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             allowFullScreen
@@ -347,7 +347,7 @@ export default function WatchPage() {
         <div ref={playerContainerRef} className={`${theater ? 'w-full' : 'lg:w-[65%]'}`}>
           <div id="player" ref={playerRef} className="relative aspect-video rounded-xl overflow-hidden bg-black mb-4">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?${autoplayQuery}&rel=0`}
+              src={`${getInstance()}/embed/${videoId}?${autoplayQuery}&rel=0`}
               className="absolute inset-0 w-full h-full"
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
@@ -627,7 +627,7 @@ export default function WatchPage() {
           title="Click to go to watch page"
         >
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1`}
+            src={`${getInstance()}/embed/${videoId}?autoplay=1&controls=0&modestbranding=1`}
             className="w-full h-full pointer-events-none"
             allow="autoplay; encrypted-media"
             title="Mini player"
